@@ -1,15 +1,48 @@
 const express = require("express");
+const mongoose = require('mongoose');
 const connectDB = require("./config/db");
-const app = express()
+const user = require('./models/user');  // Ensure you have a user model in models/user.js
+const app = express();
 
 require('dotenv').config();
 
-const PORT=process.env.PORT
+const PORT = process.env.PORT || 3000;
 
-
+const handleError = (err, res) => {
+    if (err.name === 'ValidationError') {
+        res.status(400).send({
+            message: 'Validation error',
+            errors: err.errors
+        });
+    } else if (err.code === 11000) {
+        res.status(400).send({
+            message: 'Duplicate key error',
+            error: 'Email already exists'
+        });
+    } else if (err instanceof mongoose.Error) {
+        res.status(500).send({
+            message: 'Database error occurred',
+            error: err.message
+        });
+    } else {
+        res.status(500).send({
+            message: 'An unknown error occurred',
+            error: err.message
+        });
+    }
+};
 
 app.get('/', (req, res) => {
     res.send("App is working fine");
+});
+
+app.get('/api/user', async (req, res) => {
+    try {
+        const users = await user.find();
+        res.status(200).json(users);
+    } catch (err) {
+        handleError(err, res);
+    }
 });
 
 connectDB().then(() => {
