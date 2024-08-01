@@ -8,7 +8,6 @@ require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
 
-
 app.use(express.json());
 
 const handleError = (err, res) => {
@@ -48,12 +47,25 @@ app.get('/', async (req, res) => {
     }
 });
 
-
-app.post('/api/users', async (req, res) => {
+app.post('/api/user', async (req, res) => {
     try {
         const newUser = new User(req.body);
         await newUser.save();
         res.status(201).json(newUser);
+    } catch (err) {
+        handleError(err, res);
+    }
+});
+
+app.put('/api/user/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const updatedData = req.body;
+        const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true, runValidators: true });
+        if (!updatedUser) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+        res.status(200).json(updatedUser);
     } catch (err) {
         handleError(err, res);
     }
