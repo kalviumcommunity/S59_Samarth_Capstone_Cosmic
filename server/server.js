@@ -1,12 +1,15 @@
 const express = require("express");
 const mongoose = require('mongoose');
 const connectDB = require("./config/db");
-const user = require('./models/user');  // Ensure you have a user model in models/user.js
+const User = require('./models/user');
 const app = express();
 
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
+
+
+app.use(express.json());
 
 const handleError = (err, res) => {
     if (err.name === 'ValidationError') {
@@ -36,10 +39,21 @@ app.get('/', (req, res) => {
     res.send("App is working fine");
 });
 
-app.get('/api/user', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
-        const users = await user.find();
+        const users = await User.find();
         res.status(200).json(users);
+    } catch (err) {
+        handleError(err, res);
+    }
+});
+
+
+app.post('/api/users', async (req, res) => {
+    try {
+        const newUser = new User(req.body);
+        await newUser.save();
+        res.status(201).json(newUser);
     } catch (err) {
         handleError(err, res);
     }
