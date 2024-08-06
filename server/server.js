@@ -1,14 +1,23 @@
 const express = require("express");
 const mongoose = require('mongoose');
 const connectDB = require("./config/db");
-const User = require('./models/user');
-const app = express();
-
+const cors = require('cors');
+const router = require("./Routes/Route");
 require('dotenv').config();
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+app.use(cors({
+    origin: 'http://localhost:5173', 
+    credentials: true, 
+}));
 app.use(express.json());
+
+
+app.use('/route', router);
+
 
 const handleError = (err, res) => {
     if (err.name === 'ValidationError') {
@@ -34,50 +43,15 @@ const handleError = (err, res) => {
     }
 };
 
+
 app.get('/', (req, res) => {
     res.send("App is working fine");
 });
 
-app.get('/', async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (err) {
-        handleError(err, res);
-    }
-});
-
-app.post('/api/user', async (req, res) => {
-    try {
-        const newUser = new User(req.body);
-        await newUser.save();
-        res.status(201).json(newUser);
-    } catch (err) {
-        handleError(err, res);
-    }
-});
-
-app.put('/api/user/:id', async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const updatedData = req.body;
-        const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { new: true, runValidators: true });
-        if (!updatedUser) {
-            return res.status(404).send({ message: 'User not found' });
-        }
-        res.status(200).json(updatedUser);
-    } catch (err) {
-        handleError(err, res);
-    }
-});
 
 connectDB().then(() => {
-    app.listen(PORT, (error) => {
-        if (error) {
-            console.error('Error starting the server:', error);
-        } else {
-            console.log(`The server is running on PORT ${PORT}`);
-        }
+    app.listen(PORT, () => {
+        console.log(`Server is running on PORT ${PORT}`);
     });
 }).catch((error) => {
     console.error('Error connecting to MongoDB:', error);
